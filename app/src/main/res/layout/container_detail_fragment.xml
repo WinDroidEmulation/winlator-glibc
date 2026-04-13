@@ -326,6 +326,42 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:text="@string/font_dpi" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <SeekBar
+                                android:id="@+id/SBFontDPI"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:max="384" />
+
+                            <TextView
+                                android:id="@+id/TVFontDPIValue"
+                                android:layout_width="60dp"
+                                android:layout_height="wrap_content"
+                                android:text="96"
+                                android:textAlignment="center"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/renderer" />
+
+                        <Spinner
+                            style="@style/ComboBox"
+                            android:id="@+id/SRenderer"
+                            android:layout_width="match_parent" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:text="@string/csmt" />
 
                         <Spinner
@@ -516,6 +552,7 @@
                 android:visibility="gone">
 
                 <FrameLayout
+                    android:id="@+id/FLBox64"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp">
@@ -524,14 +561,12 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:visibility="gone"
-                            android:text="@string/box86_preset" />
+                            android:text="@string/box64_version" />
 
                         <Spinner
                             style="@style/ComboBox"
-                            android:id="@+id/SBox86Preset"
-                            android:layout_width="match_parent"
-                            android:visibility="gone" />
+                            android:id="@+id/SBox64Version"
+                            android:layout_width="match_parent" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -546,7 +581,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/box86_64_rc_files" />
+                            android:text="@string/box64_rc_files" />
 
                         <Spinner
                             style="@style/ComboBox"
@@ -556,7 +591,52 @@
 
                     <TextView
                         style="@style/FieldSetLabel"
-                        android:text="@string/box86_box64" />
+                        android:text="@string/box64" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/FLFEX"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <LinearLayout style="@style/FieldSet">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/fex_version" />
+
+                        <Spinner
+                            style="@style/ComboBox"
+                            android:id="@+id/SFEXVersion"
+                            android:layout_width="match_parent" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/fex_preset" />
+
+                        <Spinner
+                            style="@style/ComboBox"
+                            android:id="@+id/SFEXPresetCustom"
+                            android:layout_width="match_parent" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="32位模拟" />
+
+                        <Spinner
+                            style="@style/ComboBox"
+                            android:id="@+id/SFEXPreset"
+                            android:layout_width="match_parent"
+                            android:entries="@array/fex_preset_entries" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/FieldSetLabel"
+                        android:text="@string/fex" />
                 </FrameLayout>
 
                 <FrameLayout
@@ -575,15 +655,6 @@
                             android:layout_width="match_parent"
                             android:id="@+id/SStartupSelection"
                             android:entries="@array/startup_selection_entries" />
-
-                        <CheckBox
-                            android:id="@+id/CBWoW64Mode"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/enable_experimental_wow64_mode"
-                            android:checked="true"
-                            android:enabled="false"
-                            android:layout_marginTop="8dp" />
                     </LinearLayout>
 
                     <TextView
@@ -667,19 +738,6 @@
 
                 <com.winlator.widget.CPUListView
                     android:id="@+id/CPUListView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/processor_affinity_32_bit_apps"
-                    android:layout_marginTop="8dp" />
-
-                <com.winlator.widget.CPUListView
-                    android:id="@+id/CPUListViewWoW64"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"

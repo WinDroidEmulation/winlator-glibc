@@ -11,7 +11,6 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -20,6 +19,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -29,19 +29,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
-import com.winlator.box86_64.Box86_64Preset;
-import com.winlator.box86_64.Box86_64PresetManager;
-import com.winlator.box86_64.rc.RCManager;
+import com.winlator.box64.Box64Preset;
+import com.winlator.box64.Box64PresetManager;
+import com.winlator.box64.rc.RCManager;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.contentdialog.AddEnvVarDialog;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.DXVKConfigDialog;
-import com.winlator.contentdialog.VKD3DConfigDialog;
 import com.winlator.contents.ContentProfile;
 import com.winlator.contents.ContentsManager;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
+import com.winlator.core.DefaultVersion;
 import com.winlator.core.EnvVars;
 import com.winlator.core.FileUtils;
 import com.winlator.core.KeyValueSet;
@@ -51,6 +51,8 @@ import com.winlator.core.WineInfo;
 import com.winlator.core.WineRegistryEditor;
 import com.winlator.core.WineThemeManager;
 import com.winlator.core.WineUtils;
+import com.winlator.fex.FEXPreset;
+import com.winlator.fex.FEXPresetManager;
 import com.winlator.midi.MidiManager;
 import com.winlator.widget.CPUListView;
 import com.winlator.widget.ColorPickerView;
@@ -140,7 +142,23 @@ public class ContainerDetailFragment extends Fragment {
 
         final ArrayList<WineInfo> wineInfos = WineUtils.getInstalledWineInfos(context);
         final Spinner sWineVersion = view.findViewById(R.id.SWineVersion);
-        //if (wineInfos.size() > 1) loadWineVersionSpinner(view, sWineVersion, wineInfos);
+        final View flBox64 = view.findViewById(R.id.FLBox64);
+        final View flFEX = view.findViewById(R.id.FLFEX);
+
+        sWineVersion.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                String wineVersionIdentifier = sWineVersion.getSelectedItem().toString();
+                WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersionIdentifier);
+                boolean isArm64EC = wineInfo.getArch().equals("arm64ec");
+                flBox64.setVisibility(isArm64EC ? View.GONE : View.VISIBLE);
+                flFEX.setVisibility(isArm64EC ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
         loadWineVersionSpinner(view, sWineVersion, wineInfos);
 
         loadScreenSizeSpinner(view, isEditMode() ? container.getScreenSize() : Container.DEFAULT_SCREEN_SIZE);
@@ -209,18 +227,37 @@ public class ContainerDetailFragment extends Fragment {
             popupMenu.show();
         });
 
-        final CheckBox cbWoW64Mode = view.findViewById(R.id.CBWoW64Mode);
-        cbWoW64Mode.setChecked(!isEditMode() || container.isWoW64Mode());
-
         final Spinner sStartupSelection = view.findViewById(R.id.SStartupSelection);
         byte previousStartupSelection = isEditMode() ? container.getStartupSelection() : -1;
         sStartupSelection.setSelection(previousStartupSelection != -1 ? previousStartupSelection : Container.STARTUP_SELECTION_ESSENTIAL);
 
-        final Spinner sBox86Preset = view.findViewById(R.id.SBox86Preset);
-        Box86_64PresetManager.loadSpinner("box86", sBox86Preset, isEditMode() ? container.getBox86Preset() : preferences.getString("box86_preset", Box86_64Preset.COMPATIBILITY));
+        final Spinner sBox64Version = view.findViewById(R.id.SBox64Version);
+        SettingsFragment.loadBox64VersionSpinner(context, contentsManager, sBox64Version);
+        String currentBox64Version = preferences.getString("box64_version", DefaultVersion.BOX64);
+        if (!AppUtils.setSpinnerSelectionFromIdentifier(sBox64Version, currentBox64Version)) {
+            AppUtils.setSpinnerSelectionFromIdentifier(sBox64Version, DefaultVersion.BOX64);
+        }
 
         final Spinner sBox64Preset = view.findViewById(R.id.SBox64Preset);
-        Box86_64PresetManager.loadSpinner("box64", sBox64Preset, isEditMode() ? container.getBox64Preset() : preferences.getString("box64_preset", Box86_64Preset.COMPATIBILITY));
+        Box64PresetManager.loadSpinner(sBox64Preset, isEditMode() ? container.getBox64Preset() : preferences.getString("box64_preset", Box64Preset.COMPATIBILITY));
+
+        final Spinner sFEXVersion = view.findViewById(R.id.SFEXVersion);
+        updateFEXVersionSpinner(context, contentsManager, sFEXVersion);
+        if (isEditMode()) {
+            AppUtils.setSpinnerSelectionFromValue(sFEXVersion, container.getFexVersion());
+        } else {
+            AppUtils.setSpinnerSelectionFromValue(sFEXVersion, preferences.getString("fex_version", "FEX-2603"));
+        }
+
+        final Spinner sFEXPresetCustom = view.findViewById(R.id.SFEXPresetCustom);
+        FEXPresetManager.loadSpinner(sFEXPresetCustom, isEditMode() ? container.getFexPresetCustom() : preferences.getString("fex_preset", FEXPreset.COMPATIBILITY));
+
+        final Spinner sFEXPreset = view.findViewById(R.id.SFEXPreset);
+        if (isEditMode()) {
+            sFEXPreset.setSelection(container.getFexPreset());
+        } else {
+            sFEXPreset.setSelection(0);
+        }
 
         final Spinner sRCFile = view.findViewById(R.id.SRCFile);
         final int[] rcfileIds = {0};
@@ -228,10 +265,7 @@ public class ContainerDetailFragment extends Fragment {
         RCManager.loadRCFileSpinner(rcManager, container == null ? 0 : container.getRCFileId(), sRCFile, id -> rcfileIds[0] = id);
 
         final CPUListView cpuListView = view.findViewById(R.id.CPUListView);
-        final CPUListView cpuListViewWoW64 = view.findViewById(R.id.CPUListViewWoW64);
-
         cpuListView.setCheckedCPUList(isEditMode() ? container.getCPUList(true) : Container.getFallbackCPUList());
-        cpuListViewWoW64.setCheckedCPUList(isEditMode() ? container.getCPUListWoW64(true) : Container.getFallbackCPUListWoW64());
 
         final Spinner sPrimaryController = view.findViewById(R.id.SPrimaryController);
         sPrimaryController.setSelection(isEditMode() ? container.getPrimaryController() : 1);
@@ -260,6 +294,7 @@ public class ContainerDetailFragment extends Fragment {
                 String envVars = envVarsView.getEnvVars();
                 String graphicsDriver = StringUtils.parseIdentifier(sGraphicsDriver.getSelectedItem());
                 String dxwrapper = StringUtils.parseIdentifier(sDXWrapper.getSelectedItem());
+                if (dxwrapper.equals("dxvk-&-vkd3d")) dxwrapper = "dxvk";
                 String dxwrapperConfig = vDXWrapperConfig.getTag().toString();
                 String audioDriver = StringUtils.parseIdentifier(sAudioDriver.getSelectedItem());
                 String midiSoundFont = sMIDISoundFont.getSelectedItemPosition() == 0 ? "" : sMIDISoundFont.getSelectedItem().toString();
@@ -268,15 +303,18 @@ public class ContainerDetailFragment extends Fragment {
                 String drives = getDrives(view);
                 boolean showFPS = cbShowFPS.isChecked();
                 String cpuList = cpuListView.getCheckedCPUListAsString();
-                String cpuListWoW64 = cpuListViewWoW64.getCheckedCPUListAsString();
-                boolean wow64Mode = cbWoW64Mode.isChecked() /* && cbWoW64Mode.isEnabled() */ ;
                 byte startupSelection = (byte)sStartupSelection.getSelectedItemPosition();
-                String box86Preset = Box86_64PresetManager.getSpinnerSelectedId(sBox86Preset);
-                String box64Preset = Box86_64PresetManager.getSpinnerSelectedId(sBox64Preset);
+                String box64Preset = Box64PresetManager.getSpinnerSelectedId(sBox64Preset);
+                String fexVersion = sFEXVersion.getSelectedItem().toString();
+                int fexPreset = sFEXPreset.getSelectedItemPosition();
+                String fexPresetCustom = FEXPresetManager.getSpinnerSelectedId(sFEXPresetCustom);
                 String desktopTheme = getDesktopTheme(view);
                 int rcfileId = rcfileIds[0];
                 int primaryController = sPrimaryController.getSelectedItemPosition();
                 String controllerMapping = getControllerMapping(view);
+
+                String box64Version = StringUtils.parseIdentifier(sBox64Version.getSelectedItem());
+                preferences.edit().putString("box64_version", box64Version).apply();
 
                 int finalInputType = 0;
                 finalInputType |= cbEnableXInput.isChecked() ? WinHandler.FLAG_INPUT_TYPE_XINPUT : 0;
@@ -288,7 +326,6 @@ public class ContainerDetailFragment extends Fragment {
                     container.setScreenSize(screenSize);
                     container.setEnvVars(envVars);
                     container.setCPUList(cpuList);
-                    container.setCPUListWoW64(cpuListWoW64);
                     container.setGraphicsDriver(graphicsDriver);
                     container.setDXWrapper(dxwrapper);
                     container.setDXWrapperConfig(dxwrapperConfig);
@@ -297,10 +334,11 @@ public class ContainerDetailFragment extends Fragment {
                     container.setDrives(drives);
                     container.setShowFPS(showFPS);
                     container.setInputType(finalInputType);
-                    container.setWoW64Mode(wow64Mode);
                     container.setStartupSelection(startupSelection);
-                    container.setBox86Preset(box86Preset);
                     container.setBox64Preset(box64Preset);
+                    container.setFexVersion(fexVersion);
+                    container.setFexPreset(fexPreset);
+                    container.setFexPresetCustom(fexPresetCustom);
                     container.setDesktopTheme(desktopTheme);
                     container.setRcfileId(rcfileId);
                     container.setMidiSoundFont(midiSoundFont);
@@ -317,7 +355,6 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("screenSize", screenSize);
                     data.put("envVars", envVars);
                     data.put("cpuList", cpuList);
-                    data.put("cpuListWoW64", cpuListWoW64);
                     data.put("graphicsDriver", graphicsDriver);
                     data.put("dxwrapper", dxwrapper);
                     data.put("dxwrapperConfig", dxwrapperConfig);
@@ -326,10 +363,11 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("drives", drives);
                     data.put("showFPS", showFPS);
                     data.put("inputType", finalInputType);
-                    data.put("wow64Mode", wow64Mode);
                     data.put("startupSelection", startupSelection);
-                    data.put("box86Preset", box86Preset);
                     data.put("box64Preset", box64Preset);
+                    data.put("fexVersion", fexVersion);
+                    data.put("fexPreset", fexPreset);
+                    data.put("fexPresetCustom", fexPresetCustom);
                     data.put("desktopTheme", desktopTheme);
                     data.put("rcfileId", rcfileId);
                     data.put("midiSoundFont", midiSoundFont);
@@ -357,6 +395,9 @@ public class ContainerDetailFragment extends Fragment {
     private void saveWineRegistryKeys(View view) {
         File userRegFile = new File(container.getRootDir(), ".wine/user.reg");
         try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+            Spinner sRenderer = view.findViewById(R.id.SRenderer);
+            registryEditor.setStringValue("Software\\Wine\\Direct3D", "renderer", Arrays.asList("vulkan", "gl", "gdi").get(sRenderer.getSelectedItemPosition()));
+
             Spinner sCSMT = view.findViewById(R.id.SCSMT);
             registryEditor.setDwordValue("Software\\Wine\\Direct3D", "csmt", sCSMT.getSelectedItemPosition() != 0 ? 3 : 0);
 
@@ -379,6 +420,11 @@ public class ContainerDetailFragment extends Fragment {
 
             Spinner sMouseWarpOverride = view.findViewById(R.id.SMouseWarpOverride);
             registryEditor.setStringValue("Software\\Wine\\DirectInput", "MouseWarpOverride", sMouseWarpOverride.getSelectedItem().toString().toLowerCase(Locale.ENGLISH));
+
+            SeekBar sbFontDPI = view.findViewById(R.id.SBFontDPI);
+            int fontDPI = sbFontDPI.getProgress() + 96;
+            registryEditor.setDwordValue("Software\\Wine\\Fonts", "LogPixels", fontDPI);
+            registryEditor.setDwordValue("Control Panel\\Desktop", "LogPixels", fontDPI);
 
             registryEditor.setStringValue("Software\\Wine\\Direct3D", "shader_backend", "glsl");
             registryEditor.setStringValue("Software\\Wine\\Direct3D", "UseGLSL", "enabled");
@@ -420,6 +466,11 @@ public class ContainerDetailFragment extends Fragment {
         File userRegFile = new File(containerDir, ".wine/user.reg");
 
         try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+            List<String> rendererList = Arrays.asList("Vulkan", "OpenGL", "GDI (no3d)");
+            Spinner sRenderer = view.findViewById(R.id.SRenderer);
+            sRenderer.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, rendererList));
+            sRenderer.setSelection(Arrays.asList("vulkan", "gl", "gdi").indexOf(registryEditor.getStringValue("Software\\Wine\\Direct3D", "renderer", "gl")));
+
             List<String> stateList = Arrays.asList(context.getString(R.string.disable), context.getString(R.string.enable));
             Spinner sCSMT = view.findViewById(R.id.SCSMT);
             sCSMT.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, stateList));
@@ -445,6 +496,29 @@ public class ContainerDetailFragment extends Fragment {
             Spinner sMouseWarpOverride = view.findViewById(R.id.SMouseWarpOverride);
             sMouseWarpOverride.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, mouseWarpOverrideList));
             AppUtils.setSpinnerSelectionFromValue(sMouseWarpOverride, registryEditor.getStringValue("Software\\Wine\\DirectInput", "MouseWarpOverride", "disable"));
+
+            SeekBar sbFontDPI = view.findViewById(R.id.SBFontDPI);
+            TextView tvFontDPIValue = view.findViewById(R.id.TVFontDPIValue);
+            int defaultFontDPI = 96;
+            int fontDPI = registryEditor.getDwordValue("Software\\Wine\\Fonts", "LogPixels", defaultFontDPI);
+            if (fontDPI < 96) fontDPI = 96;
+            if (fontDPI > 480) fontDPI = 480;
+            sbFontDPI.setProgress(fontDPI - 96);
+            tvFontDPIValue.setText(String.valueOf(fontDPI));
+
+            sbFontDPI.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                    int dpi = progress + 96;
+                    tvFontDPIValue.setText(String.valueOf(dpi));
+                }
+
+                @Override
+                public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
+            });
         }
     }
 
@@ -530,11 +604,11 @@ public class ContainerDetailFragment extends Fragment {
 
             ArrayList<String> items = new ArrayList<>();
             for (String value : dxwrapperEntries)
-                if (addAll || (!value.equals("DXVK") && !value.equals("VKD3D")))
+                if (addAll || (!value.equals("DXVK & VKD3D") && !value.equals("CNC DDraw")))
                     items.add(value);
 
             sDXWrapper.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, items.toArray(new String[0])));
-            AppUtils.setSpinnerSelectionFromIdentifier(sDXWrapper, selectedDXWrapper);
+            AppUtils.setSpinnerSelectionFromIdentifier(sDXWrapper, selectedDXWrapper.equals("dxvk") ? "dxvk-&-vkd3d" : selectedDXWrapper);
         };
 
         sGraphicsDriver.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -556,14 +630,11 @@ public class ContainerDetailFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String dxwrapper = StringUtils.parseIdentifier(sDXWrapper.getSelectedItem());
-                if (dxwrapper.equals("dxvk")) {
+                if (dxwrapper.equals("dxvk-&-vkd3d")) {
                     vDXWrapperConfig.setOnClickListener((v) -> (new DXVKConfigDialog(vDXWrapperConfig)).show());
                     vDXWrapperConfig.setVisibility(View.VISIBLE);
                 }
-                else if (dxwrapper.equals("vkd3d")) {
-                    vDXWrapperConfig.setOnClickListener((v) -> (new VKD3DConfigDialog(vDXWrapperConfig)).show());
-                    vDXWrapperConfig.setVisibility(View.VISIBLE);
-                } else vDXWrapperConfig.setVisibility(View.GONE);
+                else vDXWrapperConfig.setVisibility(View.GONE);
             }
 
             @Override
@@ -673,25 +744,9 @@ public class ContainerDetailFragment extends Fragment {
     private void loadWineVersionSpinner(final View view, Spinner sWineVersion, final ArrayList<WineInfo> wineInfos) {
         final Context context = getContext();
         sWineVersion.setEnabled(!isEditMode());
-//        sWineVersion.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @Override
-//            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-//                WineInfo wineInfo = wineInfos.get(position);
-//                boolean isMainWineVersion = WineInfo.isMainWineVersion(wineInfo.identifier());
-//                CheckBox cbWoW64Mode = view.findViewById(R.id.CBWoW64Mode);
-//                cbWoW64Mode.setEnabled(isMainWineVersion);
-//                if (!isMainWineVersion) cbWoW64Mode.setChecked(false);
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parent) {}
-//        });
-//        view.findViewById(R.id.LLWineVersion).setVisibility(View.VISIBLE);
-//        sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineInfos));
-//        if (isEditMode()) AppUtils.setSpinnerSelectionFromValue(sWineVersion, WineInfo.fromIdentifier(context, container.getWineVersion()).toString());
         view.findViewById(R.id.LLWineVersion).setVisibility(View.VISIBLE);
         ArrayList<String> wineVersions = new ArrayList<>();
-        wineVersions.add(WineInfo.MAIN_WINE_VERSION.identifier());
+        for (WineInfo wineInfo : wineInfos) wineVersions.add(wineInfo.identifier());
         for (ContentProfile profile : contentsManager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_WINE))
             wineVersions.add(ContentsManager.getEntryName(profile));
         sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineVersions));
@@ -704,6 +759,16 @@ public class ContainerDetailFragment extends Fragment {
         for (ContentProfile profile : manager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_TURNIP))
             itemList.add(ContentsManager.getEntryName(profile));
         for (ContentProfile profile : manager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_VIRGL))
+            itemList.add(ContentsManager.getEntryName(profile));
+        spinner.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, itemList));
+    }
+
+    public static void updateFEXVersionSpinner(Context context, ContentsManager manager, Spinner spinner) {
+        List<String> itemList = new ArrayList<>();
+        itemList.add("FEX-2512");
+        itemList.add("FEX-2601");
+        itemList.add("FEX-2603");
+        for (ContentProfile profile : manager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_FEX))
             itemList.add(ContentsManager.getEntryName(profile));
         spinner.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, itemList));
     }

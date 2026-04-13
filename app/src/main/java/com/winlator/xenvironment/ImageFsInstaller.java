@@ -47,17 +47,17 @@ public abstract class ImageFsInstaller {
         ImageFs imageFs = ImageFs.find(activity);
         final File rootDir = imageFs.getRootDir();
 
-        SettingsFragment.resetBox86_64Version(activity);
+        SettingsFragment.resetBox64Version(activity);
 
         final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
         dialog.show(R.string.installing_system_files);
         Executors.newSingleThreadExecutor().execute(() -> {
             clearRootDir(rootDir);
-            final byte compressionRatio = 22;
-            final long contentLength = (long)(FileUtils.getSize(activity, "imagefs.txz") * (100.0f / compressionRatio));
+            final byte compressionRatio = 18;
+            final long contentLength = (long)(FileUtils.getSize(activity, "imagefs.tzst") * (100.0f / compressionRatio));
             AtomicLong totalSizeRef = new AtomicLong();
 
-            boolean success = TarCompressorUtils.extract(TarCompressorUtils.Type.XZ, activity, "imagefs.txz", rootDir, (file, size) -> {
+            boolean success = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, activity, "imagefs.tzst", rootDir, (file, size) -> {
                 if (size > 0) {
                     long totalSize = totalSizeRef.addAndGet(size);
                     final int progress = (int)(((float)totalSize / contentLength) * 100);

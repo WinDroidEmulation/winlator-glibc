@@ -6,9 +6,9 @@
     <string name="remove">删除</string>
     <string name="add">添加</string>
     <string name="shortcuts">快捷方式</string>
-    <string name="containers">容器</string>
+    <string name="containers">容器管理</string>
     <string name="input_controls">输入控件</string>
-    <string name="no_items_to_display">没有要显示的项目</string>
+    <string name="no_items_to_display">没有可显示的项目</string>
     <string name="new_container">新容器</string>
     <string name="edit_container">编辑容器</string>
     <string name="creating_container">正在创建容器…</string>
@@ -21,12 +21,12 @@
     <string name="keyboard">键盘</string>
     <string name="toggle_fullscreen">切换全屏</string>
     <string name="exit">退出</string>
-    <string name="no_control_element_selected">未选择控件</string>
+    <string name="no_control_element_selected">未选择控件元素</string>
     <string name="scale">缩放</string>
     <string name="shape">形状</string>
     <string name="type">类型</string>
     <string name="binding">绑定</string>
-    <string name="binding_secondary">二次绑定</string>
+    <string name="binding_secondary">次要绑定</string>
     <string name="binding_up">绑定 向上</string>
     <string name="binding_right">绑定 向右</string>
     <string name="binding_down">绑定 向下</string>
@@ -55,7 +55,7 @@
     <string name="enabled">已启用</string>
     <string name="disabled">已禁用</string>
     <string name="container">容器</string>
-    <string name="screen_size">屏幕大小</string>
+    <string name="screen_size">屏幕分辨率</string>
     <string name="new_environment_variable">新环境变量</string>
     <string name="environment_variables">环境变量</string>
     <string name="value">值</string>
@@ -68,6 +68,7 @@
     <string name="unable_to_import_profile">无法导入配置文件</string>
     <string name="wine_configuration">Wine 配置</string>
     <string name="registry_keys">注册表项</string>
+    <string name="font_dpi">字体 DPI</string>
     <string name="csmt">CSMT （命令流多线程）</string>
     <string name="gpu_name">GPU 名称</string>
     <string name="offscreen_rendering_mode">离屏渲染模式</string>
@@ -105,9 +106,9 @@
     <string name="drives">驱动器</string>
     <string name="force_fullscreen">强制全屏</string>
     <string name="range">范围</string>
-    <string name="enable">启用</string>
-    <string name="disable">禁用</string>
-    <string name="force">强制</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
+    <string name="force">Force</string>
     <string name="installed_wine">已安装的 Wine</string>
     <string name="install_wine">安装 Wine</string>
     <string name="version">版本</string>
@@ -125,9 +126,9 @@
     <string name="estimated_used_space">估计已用空间</string>
     <string name="advanced">高级</string>
     <string name="system">系统</string>
-    <string name="box86_preset">Box86 预设</string>
     <string name="box64_preset">Box64 预设</string>
-    <string name="box86_version">Box86 版本</string>
+    <string name="fex_preset">FEX 预设</string>
+    <string name="fex_version">FEX 版本</string>
     <string name="box64_version">Box64 版本</string>
     <string name="target_path">目标路径</string>
     <string name="use_dri3_extension">使用 DRI3 扩展</string>
@@ -174,7 +175,8 @@
     <string name="enable_experimental_wow64_mode">启用实验性 WoW64 模式</string>
     <string name="logs">日志</string>
     <string name="enable_wine_debug">启用 Wine 调试</string>
-    <string name="enable_box86_64_logs">启用 Box86/Box64 日志</string>
+    <string name="enable_box64_logs">启用 Box64 日志</string>
+    <string name="enable_startup_desktop_logs">日志写入文件(Download/Winlator/startup_desktop_logs.txt)</string>
     <string name="export">导出</string>
     <string name="logs_exported_to">日志已导出到</string>
     <string name="general">常规</string>
@@ -186,7 +188,6 @@
     <string name="as_axis">轴</string>
     <string name="both">两者</string>
     <string name="trigger_type">扳机键类型</string>
-    <string name="use_glibc">使用本地 Glibc 替代 Proot</string>
     <string name="experimental">实验性的</string>
     <string name="glibc_exp_edition">Glibc 实验性版本</string>
     <string name="enabled_async">启用 Async</string>
@@ -212,7 +213,7 @@
     <string name="cannot_remove_default_profile">无法删除默认配置文件</string>
     <string name="cannot_edit_default_profile">无法编辑默认配置文件</string>
     <string name="do_you_want_to_restore_default_profile">你想要恢复默认配置文件吗？</string>
-    <string name="box86_64_rc_files">RC 文件</string>
+    <string name="box64_rc_files">RC 文件</string>
     <string name="letter">盘符</string>
     <string name="simulate_touch_screen">模拟触摸屏</string>
     <string name="install_content">安装附加内容</string>
@@ -247,7 +248,7 @@
     <string name="reinstall_imagefs">重新安装文件系统</string>
     <string name="do_you_want_to_reinstall_imagefs">您想要重新安装文件系统吗？该操作会恢复文件系统，您的容器不会被更改。</string>
     <string name="unable_to_remove_content_since_container_using">无法删除该附加内容，因为 %s 正在使用该版本Wine.</string>
-    <string name="get_more_contents_form_github">你可以访问 https://github.com/longjunyu2/winlator/releases 获取更多附加内容。</string>
+    <string name="get_more_contents_form_github">你可以访问 https://github.com/moze30/winlator-wcp/releases 获取更多附加内容。</string>
     <string name="midi_sound_font">MIDI 音色库</string>
     <string name="sound">声音</string>
     <string name="do_you_want_to_remove_this_sound_font">您是否要删除该音色库？</string>
@@ -305,4 +306,12 @@
     <string name="thumbstick_right">摇杆 右</string>
     <string name="thumbstick_up">摇杆 上</string>
     <string name="thumbstick_down">摇杆 下</string>
+    <string name="terminal">终端</string>
+    <string name="export_terminal_output">导出输出</string>
+    <string name="real_time_log">实时日志</string>
+    <string name="terminal_output_exported">终端输出已导出到</string>
+    <string name="export_failed">导出失败</string>
+    <string name="use_termux_x11_instead_of_built_in_xserver">使用 Termux-X11 代替内置 X Server</string>
+    <string name="clear">清屏</string>
+    <string name="enable_touchpad_mouse_clicks">启用触摸板鼠标点击</string>
 </resources>

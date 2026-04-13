@@ -140,7 +140,6 @@ public class ContainerManager {
         dstContainer.setScreenSize(srcContainer.getScreenSize());
         dstContainer.setEnvVars(srcContainer.getEnvVars());
         dstContainer.setCPUList(srcContainer.getCPUList());
-        dstContainer.setCPUListWoW64(srcContainer.getCPUListWoW64());
         dstContainer.setGraphicsDriver(srcContainer.getGraphicsDriver());
         dstContainer.setDXWrapper(srcContainer.getDXWrapper());
         dstContainer.setDXWrapperConfig(srcContainer.getDXWrapperConfig());
@@ -148,10 +147,11 @@ public class ContainerManager {
         dstContainer.setWinComponents(srcContainer.getWinComponents());
         dstContainer.setDrives(srcContainer.getDrives());
         dstContainer.setShowFPS(srcContainer.isShowFPS());
-        dstContainer.setWoW64Mode(srcContainer.isWoW64Mode());
         dstContainer.setStartupSelection(srcContainer.getStartupSelection());
-        dstContainer.setBox86Preset(srcContainer.getBox86Preset());
         dstContainer.setBox64Preset(srcContainer.getBox64Preset());
+        dstContainer.setFexVersion(srcContainer.getFexVersion());
+        dstContainer.setFexPreset(srcContainer.getFexPreset());
+        dstContainer.setFexPresetCustom(srcContainer.getFexPresetCustom());
         dstContainer.setDesktopTheme(srcContainer.getDesktopTheme());
         dstContainer.setRcfileId(srcContainer.getRCFileId());
         dstContainer.setWineVersion(srcContainer.getWineVersion());
@@ -190,8 +190,23 @@ public class ContainerManager {
         return null;
     }
 
-    private void extractCommonDlls(String srcName, String dstName, JSONObject commonDlls, File containerDir, OnExtractFileListener onExtractFileListener) throws JSONException {
-        File srcDir = new File(ImageFs.find(context).getRootDir(), "/opt/wine/lib/wine/"+srcName);
+    public Container getActivatedContainer() {
+        File file = new File(homeDir, ImageFs.USER);
+        if (FileUtils.isSymlink(file)) {
+            try {
+                String targetPath = file.getCanonicalPath();
+                for (Container container : containers) {
+                    if (container.getRootDir().getCanonicalPath().equals(targetPath)) return container;
+                }
+            }
+            catch (java.io.IOException e) {}
+        }
+        return null;
+    }
+
+    private void extractCommonDlls(String winePath, String srcName, String dstName, JSONObject commonDlls, File containerDir, OnExtractFileListener onExtractFileListener) throws JSONException {
+        File srcDir = new File(ImageFs.find(context).getRootDir(), winePath + "/lib/wine/"+srcName);
+        if (!commonDlls.has(dstName)) return;
         JSONArray dlnames = commonDlls.getJSONArray(dstName);
 
         for (int i = 0; i < dlnames.length(); i++) {
@@ -207,13 +222,21 @@ public class ContainerManager {
 
     public boolean extractContainerPatternFile(String wineVersion, File containerDir, OnExtractFileListener onExtractFileListener) {
         if (WineInfo.isMainWineVersion(wineVersion)) {
-            boolean result = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, "container_pattern.tzst", containerDir, onExtractFileListener);
+            WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
+            String arch = wineInfo.getArch();
+            String patternFile = arch.equals("arm64ec") ? "arm64ec-container_pattern.tzst" : "x86_64-container_pattern.tzst";
+            
+            boolean result = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, patternFile, containerDir, onExtractFileListener);
 
             if (result) {
                 try {
-                    JSONObject commonDlls = new JSONObject(FileUtils.readString(context, "common_dlls.json"));
-                    extractCommonDlls("x86_64-windows", "system32", commonDlls, containerDir, onExtractFileListener);
-                    extractCommonDlls("i386-windows", "syswow64", commonDlls, containerDir, onExtractFileListener);
+                    String commonDllsFile = arch.equals("arm64ec") ? "arm64ec-common_dlls.json" : "x86_64-common_dlls.json";
+                    JSONObject commonDlls = new JSONObject(FileUtils.readString(context, commonDllsFile));
+                    
+                    String nativeWindowsDir = arch.equals("arm64ec") ? "aarch64-windows" : "x86_64-windows";
+                    
+                    extractCommonDlls(wineInfo.path, nativeWindowsDir, "system32", commonDlls, containerDir, onExtractFileListener);
+                    extractCommonDlls(wineInfo.path, "i386-windows", "syswow64", commonDlls, containerDir, onExtractFileListener);
                 }
                 catch (JSONException e) {
                     return false;
@@ -223,11 +246,6 @@ public class ContainerManager {
             return result;
         }
         else {
-//            File installedWineDir = ImageFs.find(context).getInstalledWineDir();
-//            WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
-//            String suffix = wineInfo.fullVersion()+"-"+wineInfo.getArch();
-//            File file = new File(installedWineDir, "container-pattern-"+suffix+".tzst");
-//            return TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir, onExtractFileListener);
             ContentsManager contentsManager = new ContentsManager(context);
             contentsManager.syncContents();
             ContentProfile profile = contentsManager.getProfileByEntryName(wineVersion);
