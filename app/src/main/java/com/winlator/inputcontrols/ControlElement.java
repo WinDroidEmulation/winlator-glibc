@@ -341,6 +341,21 @@ public class ControlElement {
         return text;
     }
 
+    private Binding getRangeBinding(Range range, int index) {
+        switch (range) {
+            case FROM_A_TO_Z:
+                return Binding.valueOf("KEY_"+((char)(65 + index)));
+            case FROM_0_TO_9:
+                return Binding.valueOf("KEY_"+((index + 1) % 10));
+            case FROM_F1_TO_F12:
+                return Binding.valueOf("KEY_F"+(index + 1));
+            case FROM_NP0_TO_NP9:
+                return Binding.valueOf("KEY_KP_"+((index + 1) % 10));
+            default:
+                return Binding.NONE;
+        }
+    }
+
     public void draw(Canvas canvas) {
         int snappingSize = inputControlsView.getSnappingSize();
         Paint paint = inputControlsView.getPaint();
@@ -482,14 +497,6 @@ public class ControlElement {
                     float lineBottom = boundingBox.bottom - strokeWidth * 0.5f;
                     float startX = boundingBox.left;
 
-                    if (pressed) {
-                        paint.setStyle(Paint.Style.FILL);
-                        paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
-                        canvas.drawRoundRect(startX, boundingBox.top, boundingBox.right, boundingBox.bottom, radius, radius, paint);
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setColor(oldColor);
-                    }
-
                     canvas.drawRoundRect(startX, boundingBox.top, boundingBox.right, boundingBox.bottom, radius, radius, paint);
 
                     canvas.save();
@@ -506,6 +513,12 @@ public class ControlElement {
                         String text = getRangeTextForIndex(range, index);
 
                         if (startX < boundingBox.right && startX + elementSize > boundingBox.left) {
+                            if (pressed && scroller.getBinding() == getRangeBinding(range, index)) {
+                                paint.setStyle(Paint.Style.FILL);
+                                paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
+                                canvas.drawRect(startX, boundingBox.top, startX + elementSize, boundingBox.bottom, paint);
+                            }
+
                             paint.setStyle(Paint.Style.FILL);
                             paint.setColor(primaryColor);
                             paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, elementSize - strokeWidth * 2), minTextSize));
@@ -524,14 +537,6 @@ public class ControlElement {
                     float lineRight = boundingBox.right - strokeWidth * 0.5f;
                     float startY = boundingBox.top;
 
-                    if (pressed) {
-                        paint.setStyle(Paint.Style.FILL);
-                        paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
-                        canvas.drawRoundRect(boundingBox.left, startY, boundingBox.right, boundingBox.bottom, radius, radius, paint);
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setColor(oldColor);
-                    }
-
                     canvas.drawRoundRect(boundingBox.left, startY, boundingBox.right, boundingBox.bottom, radius, radius, paint);
 
                     canvas.save();
@@ -540,13 +545,20 @@ public class ControlElement {
                     startY -= scrollOffset % elementSize;
 
                     for (byte i = rangeIndex[0]; i < rangeIndex[1]; i++) {
+                        int index = i % range.max;
                         paint.setStyle(Paint.Style.STROKE);
                         paint.setColor(oldColor);
 
                         if (startY > boundingBox.top && startY < boundingBox.bottom) canvas.drawLine(lineLeft, startY, lineRight, startY, paint);
-                        String text = getRangeTextForIndex(range, i);
+                        String text = getRangeTextForIndex(range, index);
 
                         if (startY < boundingBox.bottom && startY + elementSize > boundingBox.top) {
+                            if (pressed && scroller.getBinding() == getRangeBinding(range, index)) {
+                                paint.setStyle(Paint.Style.FILL);
+                                paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
+                                canvas.drawRect(boundingBox.left, startY, boundingBox.right, startY + elementSize, paint);
+                            }
+
                             paint.setStyle(Paint.Style.FILL);
                             paint.setColor(primaryColor);
                             paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, boundingBox.width() - strokeWidth * 2), minTextSize));
@@ -566,16 +578,29 @@ public class ControlElement {
                 int cx = boundingBox.centerX();
                 int cy = boundingBox.centerY();
                 int oldColor = paint.getColor();
+                float radius = boundingBox.height() * 0.5f;
 
                 if (pressed) {
                     paint.setStyle(Paint.Style.FILL);
                     paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
-                    canvas.drawCircle(cx, cy, boundingBox.height() * 0.5f, paint);
+                    RectF oval = new RectF(cx - radius, cy - radius, cx + radius, cy + radius);
+                    for (int i = 0; i < 4; i++) {
+                        if (states[i]) {
+                            float startAngle = 0;
+                            switch (i) {
+                                case 0: startAngle = 225; break; // Up
+                                case 1: startAngle = 315; break; // Right
+                                case 2: startAngle = 45; break;  // Down
+                                case 3: startAngle = 135; break; // Left
+                            }
+                            canvas.drawArc(oval, startAngle, 90, true, paint);
+                        }
+                    }
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setColor(oldColor);
                 }
 
-                canvas.drawCircle(cx, cy, boundingBox.height() * 0.5f, paint);
+                canvas.drawCircle(cx, cy, radius, paint);
 
                 float thumbstickX = currentPosition != null ? currentPosition.x : cx;
                 float thumbstickY = currentPosition != null ? currentPosition.y : cy;
@@ -592,11 +617,48 @@ public class ControlElement {
             }
             case TRACKPAD: {
                 float radius = boundingBox.height() * 0.15f;
+                int oldColor = paint.getColor();
 
                 if (pressed) {
                     paint.setStyle(Paint.Style.FILL);
                     paint.setColor(ColorUtils.setAlphaComponent(selected ? secondaryColor : primaryColor, 100));
-                    canvas.drawRoundRect(boundingBox.left, boundingBox.top, boundingBox.right, boundingBox.bottom, radius, radius, paint);
+
+                    canvas.save();
+                    Path clipPath = inputControlsView.getPath();
+                    clipPath.reset();
+                    clipPath.addRoundRect(new RectF(boundingBox), radius, radius, Path.Direction.CW);
+                    canvas.clipPath(clipPath);
+
+                    float cx = boundingBox.centerX();
+                    float cy = boundingBox.centerY();
+                    for (int i = 0; i < 4; i++) {
+                        if (states[i]) {
+                            Path sectorPath = new Path();
+                            sectorPath.moveTo(cx, cy);
+                            switch (i) {
+                                case 0: // Up
+                                    sectorPath.lineTo(boundingBox.left, boundingBox.top);
+                                    sectorPath.lineTo(boundingBox.right, boundingBox.top);
+                                    break;
+                                case 1: // Right
+                                    sectorPath.lineTo(boundingBox.right, boundingBox.top);
+                                    sectorPath.lineTo(boundingBox.right, boundingBox.bottom);
+                                    break;
+                                case 2: // Down
+                                    sectorPath.lineTo(boundingBox.right, boundingBox.bottom);
+                                    sectorPath.lineTo(boundingBox.left, boundingBox.bottom);
+                                    break;
+                                case 3: // Left
+                                    sectorPath.lineTo(boundingBox.left, boundingBox.bottom);
+                                    sectorPath.lineTo(boundingBox.left, boundingBox.top);
+                                    break;
+                            }
+                            sectorPath.close();
+                            canvas.drawPath(sectorPath, paint);
+                        }
+                    }
+                    canvas.restore();
+
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setColor(selected ? secondaryColor : primaryColor);
                 }

@@ -20,6 +20,10 @@ public class RangeScroller {
     private boolean scrolling = false;
     private Timer timer;
 
+    public Binding getBinding() {
+        return binding;
+    }
+
     public RangeScroller(InputControlsView inputControlsView, ControlElement element) {
         this.inputControlsView = inputControlsView;
         this.element = element;
