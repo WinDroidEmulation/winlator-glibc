@@ -197,12 +197,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
 
             TextView tvWebpage = dialog.findViewById(R.id.TVWebpage);
-            tvWebpage.setText(Html.fromHtml("<a href=\"https://www.winlator.org\">winlator.org</a>", Html.FROM_HTML_MODE_LEGACY));
+            tvWebpage.setText(Html.fromHtml("<a href=\"https://github.com/moze30/winlator-glibc\">moze30/winlator-glibc</a>", Html.FROM_HTML_MODE_LEGACY));
             tvWebpage.setMovementMethod(LinkMovementMethod.getInstance());
 
             ((TextView)dialog.findViewById(R.id.TVAppVersion)).setText(getString(R.string.version)+" "+pInfo.versionName);
 
             String creditsAndThirdPartyAppsHTML = String.join("<br />",
+                "Winlator (<a href=\"https://github.com/brunodev85/winlator\">brunodev85/winlator</a>)",
                 "Ubuntu RootFs (<a href=\"https://releases.ubuntu.com/focal\">Focal Fossa</a>)",
                 "Wine (<a href=\"https://www.winehq.org\">winehq.org</a>)",
                 "Box64 by <a href=\"https://github.com/ptitSeb\">ptitseb</a>",
@@ -213,26 +214,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 "D8VK (<a href=\"https://github.com/AlpyneDreams/d8vk\">github.com/AlpyneDreams/d8vk</a>)",
                 "CNC DDraw (<a href=\"https://github.com/FunkyFr3sh/cnc-ddraw\">github.com/FunkyFr3sh/cnc-ddraw</a>)",
                 "Hangover (<a href=\"https://github.com/AndreRH/hangover\">github.com/AndreRH/hangover</a>)",
-                "FEX (<a href=\"https://github.com/FEX-Emu/FEX\">github.com/FEX-Emu/FEX</a>)"
+                "FEX (<a href=\"https://github.com/FEX-Emu/FEX\">github.com/FEX-Emu/FEX</a>)",
+                "Termux-pacman (<a href=\"https://github.com/termux-pacman/glibc-packages\">github.com/termux-pacman/glibc-packages</a>)"
             );
 
             TextView tvCreditsAndThirdPartyApps = dialog.findViewById(R.id.TVCreditsAndThirdPartyApps);
             tvCreditsAndThirdPartyApps.setText(Html.fromHtml(creditsAndThirdPartyAppsHTML, Html.FROM_HTML_MODE_LEGACY));
             tvCreditsAndThirdPartyApps.setMovementMethod(LinkMovementMethod.getInstance());
 
-            String glibcExpVersionForkHTML = String.join("<br />",
-                    "longjunyu2's (<a href=\"https://github.com/longjunyu2/winlator/\">Fork</a>)");
-            TextView tvGlibcExpVersionFork = dialog.findViewById(R.id.TVGlibcExpVersionFork);
-            tvGlibcExpVersionFork.setText(Html.fromHtml(glibcExpVersionForkHTML, Html.FROM_HTML_MODE_LEGACY));
-            tvGlibcExpVersionFork.setMovementMethod(LinkMovementMethod.getInstance());
-
-            String glibcTermuxPacman = String.join("<br />",
-                    "Termux-pacman (<a href=\"https://github.com/termux-pacman/glibc-packages\">github.com/termux-pacman/glibc-packages</a>)");
-            TextView tvGlibcTermuxPacman = dialog.findViewById(R.id.TVGlibcTermuxPacman);
-            tvGlibcTermuxPacman.setText(Html.fromHtml(glibcTermuxPacman, Html.FROM_HTML_MODE_LEGACY));
-            tvGlibcTermuxPacman.setMovementMethod(LinkMovementMethod.getInstance());
-
             String modifyByHTML = String.join("<br />",
+                "Longjunyu2 (<a href=\"https://github.com/longjunyu2\">github.com/longjunyu2</a>)",
                 "Waim908 (<a href=\"https://github.com/Waim908\">github.com/Waim908</a>)",
                 "Afeimod (<a href=\"https://github.com/afeimod\">github.com/afeimod</a>)",
                 "Hostei (<a href=\"https://github.com/hostei33\">github.com/hostei33</a>)",
