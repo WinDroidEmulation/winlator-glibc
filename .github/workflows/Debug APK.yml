@@ -32,7 +32,7 @@ jobs:
         distribution: temurin
         java-version: 17
 
-    # 4. Setup Android SDK + NDK (IMPORTANT FIX)
+    # 4. Setup Android SDK + NDK
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
@@ -45,13 +45,15 @@ jobs:
       run: |
         mkdir -p app/src/main/assets
 
+        # Clean old imagefs (manual, no wildcard)
         rm -f app/src/main/assets/imagefs.txz
         rm -f app/src/main/assets/imagefs.tzst
 
-        echo "Downloading rootfs..."
+        echo "Downloading moze30 rootfs (imagefs-ready)..."
         wget --tries=3 --timeout=30 -O app/src/main/assets/imagefs.tzst \
         https://github.com/moze30/rootfs-winlator-glibc/releases/download/rootfs-g7.1.6-1.0/rootfs-g7.1.6-1.0.tzst
 
+        echo "Final assets:"
         ls -lh app/src/main/assets
 
     # 6. Build Debug APK
